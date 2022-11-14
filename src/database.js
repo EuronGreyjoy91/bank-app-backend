@@ -6,7 +6,7 @@ const connectionParams = {
 }
 
 //const URI = 'mongodb+srv://test:12345@cluster0.fr3prkn.mongodb.net/?retryWrites=true&w=majority'
-const URI = 'mongodb://127.0.0.1:27017';
+const URI = 'mongodb://127.0.0.1:27017/bankApp';
 
 mongoose.connect(URI, connectionParams)
     .then(() => {
