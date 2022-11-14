@@ -14,7 +14,7 @@ app.set('port', process.env.PORT || 4000);
 
 // Middlewares
 app.use(morgan('dev'));
-app.use(express.json()); //Chequea que cada peticion y envio de dato sea un JSON
+app.use(express.json()); //Chequea que cada peticion y envio de dato sea un JSO
 
 //Routes
 app.use('/api/v1/tasks', taskRoutes);
