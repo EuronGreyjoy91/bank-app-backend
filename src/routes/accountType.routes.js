@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const AccountType = require('../models/accountTypeModel');
+const accountTypeRepository = require('../models/accountTypeModel');
 
 router.get('/', async (req, res) => {
-    const accountTypes = await AccountType.find();
+    const accountTypes = await accountTypeRepository.find();
     res.json(accountTypes);
 });
 
