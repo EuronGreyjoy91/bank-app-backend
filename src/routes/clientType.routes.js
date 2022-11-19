@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const clientTypeRepository = require('../models/clientTypeModel');
+const clientTypeSchema = require('../models/clientTypeModel');
 
 router.get('/', async (req, res) => {
-    const clientTypes = await clientTypeRepository.find();
+    const clientTypes = await clientTypeSchema.find();
     res.json(clientTypes);
 });
 

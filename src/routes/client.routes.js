@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const clientRepository = require('../models/clientModel');
+const clientSchema = require('../models/clientModel');
 
 router.get('/', async (req, res) => {
-    const clients = await clientRepository.find();
+    const clients = await clientSchema.find();
     res.json(clients);
 });
 
