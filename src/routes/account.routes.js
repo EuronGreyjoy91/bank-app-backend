@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
     });
 
     accountRepository.create(account);
-    res.json({status: 'Created'});
+    res.json({ status: 'Created' });
 });
 
 module.exports = router;
