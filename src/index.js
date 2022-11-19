@@ -8,6 +8,8 @@ const studentsRoutes = require('./routes/students.routes');
 const studentsAndTasksRoutes = require('./routes/studentAndTasksRoutes');
 const accountTypeRoutes = require('./routes/accountType.routes');
 const clientTypeRoutes = require('./routes/clientType.routes');
+const accountRoutes = require('./routes/account.routes');
+const clientRoutes = require('./routes/client.routes');
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/v1/students', studentsRoutes);
 app.use('/api/v1/studentsAndTasks', studentsAndTasksRoutes);
 app.use('/api/v1/accountTypes', accountTypeRoutes);
 app.use('/api/v1/clientTypes', clientTypeRoutes);
+app.use('/api/v1/accounts', accountRoutes);
+app.use('/api/v1/clients', clientRoutes);
 
 // Static files
 
