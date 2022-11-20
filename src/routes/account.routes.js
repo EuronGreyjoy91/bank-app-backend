@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const accountSchema = require('../models/accountModel');
+const logger = require('../config/logger');
 
 router.get('/', async (req, res) => {
-    const accounts = await accountSchema.find().populate('client', 'name enable');
+    logger.debug("Some debug messages");
+    
+    const accounts = await accountSchema
+        .find()
+        .populate('client')
+        .populate('accountType');
+
     res.json(accounts);
 });
 

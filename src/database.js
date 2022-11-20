@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require('./config/logger');
 
 const connectionParams = {
     useNewUrlParser: true,
@@ -10,10 +11,10 @@ const URI = 'mongodb://127.0.0.1:27017/bankApp';
 
 mongoose.connect(URI, connectionParams)
     .then(() => {
-        console.log('Connection to database succesufully');
+        logger.info('Connection to database succesufully');
     })
     .catch(() => {
-        console.log('Error connecting database');
+        logger.error('Error connecting database');
     });
 
 

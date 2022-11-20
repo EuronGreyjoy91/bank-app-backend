@@ -2,6 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const { mongoose } = require('./database');
 
+const logger = require('./config/logger');
+
 const starWarsRoutes = require('./routes/starwars.routes');
 const accountTypeRoutes = require('./routes/accountType.routes');
 const clientTypeRoutes = require('./routes/clientType.routes');
@@ -28,5 +30,5 @@ app.use('/api/v1/clients', clientRoutes);
 
 //Start server
 app.listen(app.get('port'), () => {
-    console.log(`Server running on port: ${app.get('port')}`);
+    logger.info(`Server running on port: ${app.get('port')}`);
 });
