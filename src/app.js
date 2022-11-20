@@ -1,7 +1,5 @@
 const express = require('express');
-const morgan = require('morgan');
 const { mongoose } = require('./database');
-
 const logger = require('./config/logger');
 
 const starWarsRoutes = require('./routes/starwars.routes');
@@ -16,7 +14,6 @@ const app = express();
 app.set('port', process.env.PORT || 4000);
 
 // Middlewares
-app.use(morgan('dev'));
 app.use(express.json()); //Chequea que cada peticion y envio de dato sea un JSON
 
 //Routes
