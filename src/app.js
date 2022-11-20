@@ -13,8 +13,8 @@ const app = express();
 //Settings
 app.set('port', process.env.PORT || 4000);
 
-// Middlewares
-app.use(express.json()); //Chequea que cada peticion y envio de dato sea un JSON
+//Middlewares
+app.use(express.json());
 
 //Routes
 app.use('/api/v1/starwars', starWarsRoutes);
@@ -23,7 +23,14 @@ app.use('/api/v1/clientTypes', clientTypeRoutes);
 app.use('/api/v1/accounts', accountRoutes);
 app.use('/api/v1/clients', clientRoutes);
 
-// Static files
+//Error Handler
+app.use((error, req, res, next) => {
+    res.status(error.status).json({
+        status: error.status,
+        code: error.code,
+        message: error.message
+    })
+});
 
 //Start server
 app.listen(app.get('port'), () => {
