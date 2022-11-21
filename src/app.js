@@ -23,13 +23,28 @@ app.use('/api/v1/clientTypes', clientTypeRoutes);
 app.use('/api/v1/accounts', accountRoutes);
 app.use('/api/v1/clients', clientRoutes);
 
+//Default Route
+app.use(function (req, res) {
+    res.status(404).json({
+        status: 404,
+        code: "INVALID_URL",
+        message: "URL not found"
+    })
+});
+
+
 //Error Handler
 app.use((error, req, res, next) => {
-    res.status(error.status).json({
+    const errorResponse = {
         status: error.status,
         code: error.code,
         message: error.message
-    })
+    }
+
+    if (error.errors != null)
+        errorResponse.errors = error.errors;
+
+    res.status(error.status).json(errorResponse);
 });
 
 //Start server
