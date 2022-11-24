@@ -7,6 +7,7 @@ const accountTypeRoutes = require('./routes/accountType.routes');
 const clientTypeRoutes = require('./routes/clientType.routes');
 const accountRoutes = require('./routes/account.routes');
 const clientRoutes = require('./routes/client.routes');
+const movementTypeRoutes = require('./routes/movementType.routes');
 
 const app = express();
 
@@ -17,11 +18,14 @@ app.set('port', process.env.PORT || 4000);
 app.use(express.json());
 
 //Routes
-app.use('/api/v1/starwars', starWarsRoutes);
-app.use('/api/v1/accountTypes', accountTypeRoutes);
-app.use('/api/v1/clientTypes', clientTypeRoutes);
-app.use('/api/v1/accounts', accountRoutes);
-app.use('/api/v1/clients', clientRoutes);
+const basePath = '/api/v1';
+
+app.use(`${basePath}/starwars`, starWarsRoutes);
+app.use(`${basePath}/accountTypes`, accountTypeRoutes);
+app.use(`${basePath}/clientTypes`, clientTypeRoutes);
+app.use(`${basePath}/accounts`, accountRoutes);
+app.use(`${basePath}/clients`, clientRoutes);
+app.use(`${basePath}/movementTypes`, movementTypeRoutes);
 
 //Default Route
 app.use(function (req, res) {
