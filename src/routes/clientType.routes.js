@@ -3,13 +3,21 @@ const router = express.Router();
 const clientTypeSchema = require('../models/clientTypeModel');
 const logger = require('../config/logger');
 
-router.get('/', async (req, res) => {
-    logger.info('Inicio - GET /api/v1/clientTypes');
-    
-    const clientTypes = await clientTypeSchema.find();
+router.get(
+    '/',
+    async (req, res, next) => {
+        logger.info('Start - GET /api/v1/clientTypes');
 
-    logger.info('Fin - GET /api/v1/clientTypes');
-    res.json(clientTypes);
-});
+        try {
+            const clientTypes = await clientTypeSchema.find();
+
+            logger.info('End - GET /api/v1/clientTypes');
+            res.json(clientTypes);
+        } catch (error) {
+            logger.error(`Error searching client types. Error: ${error}`);
+            next(error);
+        }
+    }
+);
 
 module.exports = router;
