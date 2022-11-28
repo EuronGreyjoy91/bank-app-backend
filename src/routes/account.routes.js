@@ -96,7 +96,7 @@ router.patch(
     body('enable').optional().isBoolean(),
     body('alias').optional().isString(),
     async (req, res, next) => {
-        logger.info(`Start - PATCH /api/v1/accounts. AccountId: ${req.params.accountId}, body: ${JSON.stringify(req.body)}`);
+        logger.info(`Start - PATCH /api/v1/accounts/${req.params.accountId}, body: ${JSON.stringify(req.body)}`);
 
         try {
             const errors = validationResult(req);
@@ -129,7 +129,7 @@ router.patch(
 
             await accountSchema.findByIdAndUpdate(accountId, newValues);
 
-            logger.info(`End - PATCH /api/v1/accounts. AccountId: ${accountId}, body: ${JSON.stringify(req.body)}`);
+            logger.info(`End - PATCH /api/v1/accounts/${req.params.accountId}, body: ${JSON.stringify(req.body)}`);
             res.json({ status: 'OK' });
         } catch (error) {
             logger.error(`Error on update account. Error: ${error}`);
