@@ -5,6 +5,8 @@ const { body, param, validationResult } = require('express-validator');
 const accountSchema = require('../models/accountModel');
 const clientSchema = require('../models/clientModel');
 const accountTypeSchema = require('../models/accountTypeModel');
+const cardSchema = require('../models/cardModel');
+const movementSchema = require('../models/movementModel');
 const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
 const RepeatedError = require('../errors/RepeatedError');
@@ -133,6 +135,77 @@ router.patch(
             res.json({ status: 'OK' });
         } catch (error) {
             logger.error(`Error on update account. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
+router.get(
+    '/:accountId/cards',
+    param('accountId').not().isEmpty().isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}/cards`);
+
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating body", errors.array());
+            }
+
+            const accountId = req.params.accountId;
+
+            const account = await accountSchema.findById(accountId);
+            if (account == null) {
+                logger.error(`Account with id ${accountId} not found`);
+                throw new NotFoundError(`Account with id ${accountId} not found`);
+            }
+
+            const cards = await cardSchema
+                .find({ accountId: accountId })
+                .populate('cardType', 'id description')
+                .populate('account', 'id name');
+
+            logger.info(`End - GET /api/v1/accounts/${req.params.accountId}/cards`);
+            res.json(cards);
+        } catch (error) {
+            logger.error(`Error searching cards for account. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
+router.get(
+    '/:accountId/movements',
+    param('accountId').isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}/movements`);
+
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating body", errors.array());
+            }
+
+            const accountId = req.params.accountId;
+
+            const account = await accountSchema.findById(accountId);
+            if (account == null) {
+                logger.error(`Account with id ${accountId} not found`);
+                throw new NotFoundError(`Account with id ${accountId} not found`);
+            }
+
+            const movements = await movementSchema
+                .find({ accountId: accountId })
+                .populate('originAccount', 'id description')
+                .populate('destinyAccount', 'id name')
+                .populate('movementType', 'id name');
+
+            logger.info(`End - GET /api/v1/accounts/${req.params.accountId}/movements`);
+            res.json(movements);
+        } catch (error) {
+            logger.error(`Error searching movements for account. Error: ${error}`);
             next(error);
         }
     }

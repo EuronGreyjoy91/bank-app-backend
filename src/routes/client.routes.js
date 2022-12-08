@@ -34,7 +34,7 @@ router.get(
 
         try {
             const errors = validationResult(req);
-            if (!errors.isEmpty) {
+            if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
                 throw new ValidationError("Error validating body", errors.array());
             }
