@@ -15,6 +15,10 @@ const clientSchema = new Schema({
         type: mongoose.ObjectId,
         ref: 'clientType'
     },
+    user: {
+        type: mongoose.ObjectId,
+        ref: 'user'
+    }
 })
 
 module.exports = mongoose.model('client', clientSchema, 'clients');

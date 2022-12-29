@@ -10,6 +10,8 @@ const clientRoutes = require('./routes/client.routes');
 const movementTypeRoutes = require('./routes/movementType.routes');
 const cardTypeRoutes = require('./routes/cardType.routes');
 const cardRoutes = require('./routes/card.routes');
+const userTypeRoutes = require('./routes/userTypeRoutes');
+const userRoutes = require('./routes/user.routes');
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use(`${basePath}/clients`, clientRoutes);
 app.use(`${basePath}/movementTypes`, movementTypeRoutes);
 app.use(`${basePath}/cardTypes`, cardTypeRoutes);
 app.use(`${basePath}/cards`, cardRoutes);
+app.use(`${basePath}/userTypes`, userTypeRoutes);
+app.use(`${basePath}/users`, userRoutes);
 
 //Default Route
 app.use(function (req, res) {

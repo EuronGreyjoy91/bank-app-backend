@@ -15,7 +15,9 @@ router.get(
         logger.info('Start - GET /api/v1/clients');
 
         try {
-            const clients = await clientSchema.find();
+            const clients = await clientSchema
+                .find()
+                .populate('clientType', 'id description');
 
             logger.info('End - GET /api/v1/clients');
             res.json(clients);
@@ -50,7 +52,7 @@ router.get(
                 .find({ clientId: clientId })
                 .populate('client', 'id name')
                 .populate('accountType', 'id description');
-                
+
             res.json(accounts);
         } catch (error) {
             logger.error(`Error searching accounts for client ${req.params.clientId}. Error ${error}`);
