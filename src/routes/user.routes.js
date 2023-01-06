@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { body, param, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const userSchema = require('../models/userModel');
 const userTypeSchema = require('../models/userTypeModel');
 const NotFoundError = require('../errors/NotFoundError');
@@ -10,8 +10,6 @@ const logger = require('../config/logger');
 
 router.post(
     '/',
-    body('name').not().isEmpty(),
-    body('lastName').not().isEmpty(),
     body('userName').not().isEmpty(),
     body('password').not().isEmpty(),
     body('userTypeId').not().isEmpty().isLength(24),
@@ -25,10 +23,10 @@ router.post(
                 throw new ValidationError("Error validating body", errors.array());
             }
 
-            const { name, lastName, userName, password, userTypeId } = req.body;
+            const { userName, password, userTypeId } = req.body;
 
             const userType = await userTypeSchema.findById(userTypeId);
-            if (userType != null) {
+            if (userType == null) {
                 logger.error(`User type with id ${userTypeId} not found`);
                 throw new NotFoundError(`User type with id ${userTypeId} not found`);
             }
@@ -40,8 +38,6 @@ router.post(
             }
 
             const newUser = {
-                name: name,
-                lastName: lastName,
                 userName: userName,
                 password: password,
                 userType: userTypeId,

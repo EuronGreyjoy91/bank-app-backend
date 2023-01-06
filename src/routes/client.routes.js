@@ -91,7 +91,7 @@ router.post(
                 throw new NotFoundError(`Client type with id ${clientTypeId} not found`);
             }
 
-            const savedClient = await clientSchema.findOne().or([{ document: document }, { nickname: cuitCuil }]);
+            const savedClient = await clientSchema.findOne().or([{ document: document }, { cuitCuil: cuitCuil }]);
             if (savedClient != null) {
                 logger.error(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
                 throw new RepeatedError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);

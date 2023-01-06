@@ -38,7 +38,7 @@ router.post(
     body('accountTypeId').not().isEmpty().isLength(24),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
-
+        
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {

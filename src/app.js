@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { mongoose } = require('./database');
 const logger = require('./config/logger');
 
@@ -14,6 +15,8 @@ const userTypeRoutes = require('./routes/userTypeRoutes');
 const userRoutes = require('./routes/user.routes');
 
 const app = express();
+
+app.use(cors());
 
 //Settings
 app.set('port', process.env.PORT || 4000);
@@ -43,7 +46,6 @@ app.use(function (req, res) {
         message: "URL not found"
     })
 });
-
 
 //Error Handler
 app.use((error, req, res, next) => {
