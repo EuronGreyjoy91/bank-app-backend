@@ -18,9 +18,25 @@ router.get(
         logger.info('Start - GET /api/v1/accounts');
 
         try {
+            let filters = {};
+            const accountTypeIdFilter = req.query.accountTypeId;
+            if (accountTypeIdFilter != undefined)
+                filters.accountType = accountTypeIdFilter;
+
+            const aliasFilter = req.query.alias;
+            if (aliasFilter != undefined){
+                console.log("d")
+                filters.alias = aliasFilter;
+            }
+
+            const accountNumberFilter = req.query.accountNumber;
+            if (accountNumberFilter != undefined){
+                filters.number = accountNumberFilter;
+            }
+                
             const accounts = await accountSchema
-                .find()
-                .populate('client', 'id name')
+                .find(filters)
+                .populate('client', 'id name lastName')
                 .populate('accountType', 'id description');
 
             logger.info(`End - GET /api/v1/accounts`);
@@ -38,7 +54,7 @@ router.post(
     body('accountTypeId').not().isEmpty().isLength(24),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
-        
+
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
