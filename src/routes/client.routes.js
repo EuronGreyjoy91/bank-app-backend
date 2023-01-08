@@ -14,9 +14,23 @@ router.get(
     async (req, res, next) => {
         logger.info('Start - GET /api/v1/clients');
 
+        let filters = {};
+
+        const clientTypeIdFilter = req.query.clientTypeId;
+        if (clientTypeIdFilter != undefined)
+            filters.clientType = clientTypeIdFilter;
+
+        const cuitCuilFilter = req.query.cuitCuil;
+        if (cuitCuilFilter != undefined)
+            filters.cuitCuil = cuitCuilFilter;
+
+        const documentFilter = req.query.document;
+        if (documentFilter != undefined)
+            filters.document = req.query.document;
+
         try {
             const clients = await clientSchema
-                .find()
+                .find(filters)
                 .populate('clientType', 'id description');
 
             logger.info('End - GET /api/v1/clients');
