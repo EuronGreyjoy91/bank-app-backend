@@ -24,16 +24,16 @@ router.get(
                 filters.accountType = accountTypeIdFilter;
 
             const aliasFilter = req.query.alias;
-            if (aliasFilter != undefined){
+            if (aliasFilter != undefined) {
                 console.log("d")
                 filters.alias = aliasFilter;
             }
 
             const accountNumberFilter = req.query.accountNumber;
-            if (accountNumberFilter != undefined){
+            if (accountNumberFilter != undefined) {
                 filters.number = accountNumberFilter;
             }
-                
+
             const accounts = await accountSchema
                 .find(filters)
                 .populate('client', 'id name lastName')
@@ -48,10 +48,45 @@ router.get(
     }
 );
 
+router.get(
+    '/:accountId',
+    param('accountId').not().isEmpty().isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}`);
+
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating request. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating request", errors.array());
+            }
+
+            const accountId = req.params.accountId;
+
+            const account = await accountSchema
+                .findOne({ _id: accountId })
+                .populate('client', 'id name lastName')
+                .populate('accountType', 'id description');
+
+            if (account == null) {
+                logger.error(`Account with id ${accountId} not found`);
+                throw new NotFoundError(`Account with id ${accountId} not found`);
+            }
+
+            logger.info(`End - GET /api/v1/accounts/${req.params.accountId}`);
+            res.json(account);
+        } catch (error) {
+            logger.error(`Error getting account. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
 router.post(
     '/',
     body('clientId').not().isEmpty().isLength(24),
     body('accountTypeId').not().isEmpty().isLength(24),
+    body('alias').optional().isString(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
 
@@ -63,6 +98,7 @@ router.post(
             }
 
             const { clientId, accountTypeId } = req.body;
+            let { alias } = req.body;
 
             const client = await clientSchema.findById(clientId);
             if (client == null) {
@@ -82,10 +118,19 @@ router.post(
                 throw new RepeatedError(`Repeated account. Client id: ${clientId}, Account type id: ${accountTypeId}`);
             }
 
+            if (alias == null || alias == '')
+                alias = generateAlias();
+
+            const accountWithSameAlias = await accountSchema.findOne({ alias: alias });
+            if (accountWithSameAlias != null) {
+                logger.error(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
+                throw new RepeatedError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
+            }
+
             const account = new accountSchema({
                 client: clientId,
                 accountType: accountTypeId,
-                alias: generateAlias(),
+                alias: alias,
                 number: 'TEST-CHANGE-LATER', //TODO: CAMBIAR!
                 balance: 0,
                 creationDate: new Date(),
