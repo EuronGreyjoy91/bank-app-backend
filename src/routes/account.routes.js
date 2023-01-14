@@ -25,7 +25,6 @@ router.get(
 
             const aliasFilter = req.query.alias;
             if (aliasFilter != undefined) {
-                console.log("d")
                 filters.alias = aliasFilter;
             }
 

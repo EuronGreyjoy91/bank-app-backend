@@ -1,12 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const userSchema = require('../models/userModel');
 const userTypeSchema = require('../models/userTypeModel');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
 const RepeatedError = require('../errors/RepeatedError');
 const logger = require('../config/logger');
+
+router.get(
+    '/',
+    async (req, res, next) => {
+        logger.info('Start - GET /api/v1/users');
+
+        try {
+            let filters = {};
+            const userTypeIdFilter = req.query.userTypeId;
+            if (userTypeIdFilter != undefined)
+                filters.userType = userTypeIdFilter;
+
+            const userName = req.query.userName;
+            if (userName != undefined)
+                filters.userName = userName;
+
+            const users = await userSchema
+                .find(filters)
+                .populate('userType', 'id description')
+                .select('_id userName enable creationDate')
+
+            logger.info(`End - GET /api/v1/users`);
+            res.json(users);
+        } catch (error) {
+            logger.error(`Error searching users. Error: ${error}`);
+            next(error);
+        }
+    }
+);
 
 router.post(
     '/',
@@ -52,6 +81,43 @@ router.post(
             res.json({ status: 'OK' });
         } catch (error) {
             logger.error(`Error saving user. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
+router.patch(
+    '/:userId',
+    param('userId').not().isEmpty().isLength(24),
+    body('enable').optional().isBoolean(),
+    async (req, res, next) => {
+        logger.info(`Start - PATCH /api/v1/users, body: ${JSON.stringify(req.body)}`);
+
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating body", errors.array());
+            }
+
+            const userId = req.params.userId;
+            const { enable } = req.body;
+
+            const newValues = {
+                enable
+            };
+
+            if (enable != null && !enable)
+                newValues.deleteDate = new Date()
+            else if (enable != null && enable)
+                newValues.deleteDate = null;
+
+            await userSchema.findByIdAndUpdate(userId, newValues);
+
+            logger.info(`End - PATCH /api/v1/users, body: ${JSON.stringify(req.body)}`);
+            res.json({ status: 'OK' });
+        } catch (error) {
+            logger.error(`Error on update user. Error: ${error}`);
             next(error);
         }
     }
