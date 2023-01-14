@@ -15,7 +15,8 @@ const accountSchema = new Schema({
     balance: { type: Number, required: true },
     creationDate: { type: Date, required: true },
     enable: { type: Boolean, required: true },
-    deleteDate: { type: Date }
+    deleteDate: { type: Date },
+    offLimitAmount: {type: Number, required: true}
 })
 
 module.exports = mongoose.model('account', accountSchema, 'accounts');

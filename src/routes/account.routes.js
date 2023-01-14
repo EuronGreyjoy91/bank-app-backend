@@ -37,7 +37,7 @@ router.get(
             const accounts = await accountSchema
                 .find(filters)
                 .populate('client', 'id name lastName')
-                .populate('accountType', 'id description');
+                .populate('accountType', 'id description code');
 
             logger.info(`End - GET /api/v1/accounts`);
             res.json(accounts);
@@ -66,7 +66,7 @@ router.get(
             const account = await accountSchema
                 .findOne({ _id: accountId })
                 .populate('client', 'id name lastName')
-                .populate('accountType', 'id description');
+                .populate('accountType', 'id description code');
 
             if (account == null) {
                 logger.error(`Account with id ${accountId} not found`);
@@ -85,8 +85,9 @@ router.get(
 router.post(
     '/',
     body('clientId').not().isEmpty().isLength(24),
-    body('accountTypeId').not().isEmpty().isLength(24),
+    body('accountTypeCode').not().isEmpty(),
     body('alias').optional().isString(),
+    body('offLimitAmount').optional().isNumeric(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
 
@@ -97,7 +98,7 @@ router.post(
                 throw new ValidationError("Error validating body", errors.array());
             }
 
-            const { clientId, accountTypeId } = req.body;
+            const { clientId, accountTypeCode, offLimitAmount } = req.body;
             let { alias } = req.body;
 
             const client = await clientSchema.findById(clientId);
@@ -106,16 +107,16 @@ router.post(
                 throw new NotFoundError(`Client with id ${clientId} not found`);
             }
 
-            const accountType = await accountTypeSchema.findById(accountTypeId);
+            const accountType = await accountTypeSchema.findOne({ code: accountTypeCode });
             if (accountType == null) {
-                logger.error(`Account type with id ${accountTypeId} not found`);
-                throw new NotFoundError(`Account type with id ${accountTypeId} not found`);
+                logger.error(`Account type with code ${accountTypeCode} not found`);
+                throw new NotFoundError(`Account type with code ${accountTypeCode} not found`);
             }
 
-            const savedAccount = await accountSchema.findOne({ client: clientId, accountType: accountTypeId });
+            const savedAccount = await accountSchema.findOne({ client: clientId, accountType: accountType._id });
             if (savedAccount != null) {
-                logger.error(`Repeated account. Client id: ${clientId}, Account type id: ${accountTypeId}`);
-                throw new RepeatedError(`Repeated account. Client id: ${clientId}, Account type id: ${accountTypeId}`);
+                logger.error(`Repeated account. Client id: ${clientId}, Account type id: ${accountType._id}`);
+                throw new RepeatedError(`Repeated account. Client id: ${clientId}, Account type id: ${accountType._id}`);
             }
 
             if (alias == null || alias == '')
@@ -127,15 +128,27 @@ router.post(
                 throw new RepeatedError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
             }
 
+            let accountNumberRepeated = true;
+            let accountNumber;
+
+            while (accountNumberRepeated) {
+                accountNumber = `182/${generateAccountNumber(10000, 99999)}`;
+                const accountWithSameNumber = await accountSchema.findOne({ number: accountNumber });
+
+                if (accountWithSameNumber == null)
+                    accountNumberRepeated = false;
+            }
+
             const account = new accountSchema({
                 client: clientId,
-                accountType: accountTypeId,
+                accountType: accountType._id,
                 alias: alias,
-                number: 'TEST-CHANGE-LATER', //TODO: CAMBIAR!
+                number: accountNumber,
                 balance: 0,
                 creationDate: new Date(),
                 enable: true,
-                deleteDate: null
+                deleteDate: null,
+                offLimitAmount: accountTypeCode === 'CAJA_AHORRO' ? 0 : offLimitAmount
             });
 
             await accountSchema.create(account);
@@ -153,11 +166,18 @@ function generateAlias() {
     return randomWords(3).map(word => word.toUpperCase()).join('-')
 }
 
+function generateAccountNumber(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
 router.patch(
     '/:accountId',
     param('accountId').not().isEmpty().isLength(24),
     body('enable').optional().isBoolean(),
     body('alias').optional().isString(),
+    body('offLimitAmount').optional().isNumeric(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/accounts/${req.params.accountId}, body: ${JSON.stringify(req.body)}`);
 
@@ -169,7 +189,7 @@ router.patch(
             }
 
             const accountId = req.params.accountId;
-            const { enable, alias } = req.body;
+            const { enable, alias, offLimitAmount } = req.body;
 
             const account = await accountSchema.findById(accountId);
             if (account == null) {
@@ -179,7 +199,7 @@ router.patch(
 
             if (alias != null) {
                 const accountWithSameAlias = await accountSchema.findOne({ alias: alias });
-                if (accountWithSameAlias != null) {
+                if (accountWithSameAlias != null && accountWithSameAlias._id != accountId) {
                     logger.error(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
                     throw new RepeatedError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
                 }
@@ -189,6 +209,14 @@ router.patch(
                 alias,
                 enable
             };
+
+            if (offLimitAmount != null)
+                newValues.offLimitAmount = offLimitAmount;
+
+            if (enable != null && !enable)
+                newValues.deleteDate = new Date()
+            else if (enable != null && enable)
+                newValues.deleteDate = null;
 
             await accountSchema.findByIdAndUpdate(accountId, newValues);
 
