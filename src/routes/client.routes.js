@@ -12,7 +12,7 @@ const logger = require('../config/logger');
 router.get(
     '/',
     async (req, res, next) => {
-        logger.info('Start - GET /api/v1/clients');
+        logger.info(`Start - GET /api/v1/clients, query: ${JSON.stringify(req.query)}`);
 
         let filters = {};
 
@@ -33,10 +33,42 @@ router.get(
                 .find(filters)
                 .populate('clientType', 'id description');
 
-            logger.info('End - GET /api/v1/clients');
+            logger.info(`End - GET /api/v1/clients, query: ${JSON.stringify(req.query)}`);
             res.json(clients);
         } catch (error) {
             logger.error(`Error searching clients. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
+router.get(
+    '/:clientId',
+    param('clientId').not().isEmpty().isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/clients/${req.params.clientId}`);
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating request. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating request", errors.array());
+            }
+
+            const clientId = req.params.clientId;
+
+            const client = await clientSchema
+                .findOne({ _id: clientId })
+                .populate('clientType', 'id description code');
+
+            if (client == null) {
+                logger.error(`Client with id ${clientId} not found`);
+                throw new NotFoundError(`Client with id ${clientId} not found`);
+            }
+
+            logger.info(`End - GET /api/v1/clients/${req.params.clientId}`);
+            res.json(client);
+        } catch (error) {
+            logger.error(`Error getting client. Error: ${error}`);
             next(error);
         }
     }
@@ -67,6 +99,7 @@ router.get(
                 .populate('client', 'id name')
                 .populate('accountType', 'id description');
 
+            logger.info(`End - GET /api/v1/clients/${req.params.clientId}/accounts, body: ${JSON.stringify(req.body)}`);
             res.json(accounts);
         } catch (error) {
             logger.error(`Error searching accounts for client ${req.params.clientId}. Error ${error}`);
@@ -77,13 +110,13 @@ router.get(
 
 router.post(
     '/',
-    body('name').optional().not().isEmpty(),
-    body('lastName').optional().not().isEmpty(),
-    body('document').optional().not().isEmpty(),
+    body('name').optional().not().isEmpty().isLength({ min: 3, max: 200 }),
+    body('lastName').optional().not().isEmpty().isLength({ min: 3, max: 200 }),
+    body('document').optional().not().isEmpty().isLength({ min: 8, max: 8 }),
     body('businessName').optional().not().isEmpty(),
-    body('adress').not().isEmpty(),
-    body('cuitCuil').not().isEmpty(),
-    body('clientTypeId').not().isEmpty().isLength(24),
+    body('adress').optional().not().isEmpty(),
+    body('cuitCuil').not().isEmpty().isLength({ min: 8, max: 11 }),
+    body('clientTypeCode').not().isEmpty(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/clients, body: ${JSON.stringify(req.body)}`);
 
@@ -96,13 +129,13 @@ router.post(
 
             const {
                 name, lastName, document, businessName,
-                adress, cuitCuil, clientTypeId
+                adress, cuitCuil, clientTypeCode
             } = req.body;
 
-            const clientType = await clientTypeSchema.findById(clientTypeId);
+            const clientType = await clientTypeSchema.findOne({ code: clientTypeCode });
             if (clientType == null) {
-                logger.error(`Client type with id ${clientTypeId} not found`);
-                throw new NotFoundError(`Client type with id ${clientTypeId} not found`);
+                logger.error(`Client type with code ${clientTypeCode} not found`);
+                throw new NotFoundError(`Client type with code ${clientTypeCode} not found`);
             }
 
             const savedClient = await clientSchema.findOne().or([{ document: document }, { cuitCuil: cuitCuil }]);
@@ -121,7 +154,7 @@ router.post(
                 creationDate: new Date(),
                 enable: true,
                 deleteDate: null,
-                clientType: clientTypeId
+                clientType: clientType._id
             });
 
             await clientSchema.create(newClient);
@@ -138,9 +171,12 @@ router.post(
 router.patch(
     '/:clientId',
     param('clientId').not().isEmpty().isLength(24),
-    body('name').optional().isString(),
-    body('lastName').optional().isString(),
+    body('name').optional().isString().isLength({ min: 3, max: 200 }),
+    body('lastName').optional().isString().isLength({ min: 3, max: 200 }),
     body('adress').optional().not().isEmpty(),
+    body('bussinessName').optional().not().isEmpty(),
+    body('document').optional().not().isEmpty().isLength({ min: 8, max: 8 }),
+    body('cuitCuil').not().isEmpty().isLength({ min: 8, max: 11 }),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/clients/${req.params.clientId}, body: ${JSON.stringify(req.body)}`);
@@ -153,7 +189,7 @@ router.patch(
             }
 
             const clientId = req.params.clientId;
-            const { name, lastName, adress, enable } = req.body;
+            const { name, lastName, adress, enable, businessName, document, cuitCuil } = req.body;
 
             const client = await clientSchema.findById(clientId);
             if (client == null) {
@@ -161,12 +197,28 @@ router.patch(
                 throw new NotFoundError(`Client with id ${clientId} not found`);
             }
 
+            if (document != null || cuitCuil != null) {
+                const savedClient = await clientSchema.findOne().or([{ document: document }, { cuitCuil: cuitCuil }]);
+                if (savedClient != null && savedClient._id != clientId) {
+                    logger.error(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
+                    throw new RepeatedError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
+                }
+            }
+
             const newValues = {
                 name,
                 lastName,
                 adress,
+                businessName,
+                document,
+                cuitCuil,
                 enable
             }
+
+            if (enable != null && !enable)
+                newValues.deleteDate = new Date()
+            else if (enable != null && enable)
+                newValues.deleteDate = null;
 
             await clientSchema.findByIdAndUpdate(clientId, newValues);
 

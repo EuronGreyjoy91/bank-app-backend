@@ -15,7 +15,7 @@ const logger = require('../config/logger');
 router.get(
     '/',
     async (req, res, next) => {
-        logger.info('Start - GET /api/v1/accounts');
+        logger.info(`Start - GET /api/v1/accounts, query: ${JSON.stringify(req.query)}`);
 
         try {
             let filters = {};
@@ -38,7 +38,7 @@ router.get(
                 .populate('client', 'id name lastName')
                 .populate('accountType', 'id description code');
 
-            logger.info(`End - GET /api/v1/accounts`);
+            logger.info(`End - GET /api/v1/accounts, query: ${JSON.stringify(req.query)}`);
             res.json(accounts);
         } catch (error) {
             logger.error(`Error searching accounts. Error: ${error}`);
@@ -85,8 +85,8 @@ router.post(
     '/',
     body('clientId').not().isEmpty().isLength(24),
     body('accountTypeCode').not().isEmpty(),
-    body('alias').optional().isString(),
-    body('offLimitAmount').optional().isNumeric(),
+    body('alias').optional().isString().isLength({min: 10, max: 200}),
+    body('offLimitAmount').optional(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
 
@@ -162,7 +162,7 @@ router.post(
 );
 
 function generateAlias() {
-    return randomWords(3).map(word => word.toUpperCase()).join('-')
+    return randomWords(3).map(word => word.toUpperCase()).join('.')
 }
 
 function generateAccountNumber(min, max) {
@@ -175,7 +175,7 @@ router.patch(
     '/:accountId',
     param('accountId').not().isEmpty().isLength(24),
     body('enable').optional().isBoolean(),
-    body('alias').optional().isString(),
+    body('alias').optional().isString().isLength({min: 10, max: 200}),
     body('offLimitAmount').optional().isNumeric(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/accounts/${req.params.accountId}, body: ${JSON.stringify(req.body)}`);

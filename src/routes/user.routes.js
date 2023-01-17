@@ -11,7 +11,7 @@ const logger = require('../config/logger');
 router.get(
     '/',
     async (req, res, next) => {
-        logger.info('Start - GET /api/v1/users');
+        logger.info(`Start - GET /api/v1/users, query: ${JSON.stringify(req.query)}`);
 
         try {
             let filters = {};
@@ -28,7 +28,7 @@ router.get(
                 .populate('userType', 'id description')
                 .select('_id userName enable creationDate')
 
-            logger.info(`End - GET /api/v1/users`);
+            logger.info(`End - GET /api/v1/users, query: ${JSON.stringify(req.query)}`);
             res.json(users);
         } catch (error) {
             logger.error(`Error searching users. Error: ${error}`);
@@ -39,8 +39,8 @@ router.get(
 
 router.post(
     '/',
-    body('userName').not().isEmpty(),
-    body('password').not().isEmpty(),
+    body('userName').not().isEmpty().isLength({min: 5, max: 100}),
+    body('password').not().isEmpty().isLength({min: 5, max: 100}),
     body('userTypeId').not().isEmpty().isLength(24),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/users, body: ${JSON.stringify(req.body)}`);
@@ -91,7 +91,7 @@ router.patch(
     param('userId').not().isEmpty().isLength(24),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
-        logger.info(`Start - PATCH /api/v1/users, body: ${JSON.stringify(req.body)}`);
+        logger.info(`Start - PATCH /api/v1/users/${req.params.userId}, body: ${JSON.stringify(req.body)}`);
 
         try {
             const errors = validationResult(req);
@@ -114,7 +114,7 @@ router.patch(
 
             await userSchema.findByIdAndUpdate(userId, newValues);
 
-            logger.info(`End - PATCH /api/v1/users, body: ${JSON.stringify(req.body)}`);
+            logger.info(`End - PATCH /api/v1/users/${req.params.userId}, body: ${JSON.stringify(req.body)}`);
             res.json({ status: 'OK' });
         } catch (error) {
             logger.error(`Error on update user. Error: ${error}`);

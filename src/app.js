@@ -3,7 +3,6 @@ const cors = require('cors');
 const { mongoose } = require('./database');
 const logger = require('./config/logger');
 
-const starWarsRoutes = require('./routes/starwars.routes');
 const accountTypeRoutes = require('./routes/accountType.routes');
 const clientTypeRoutes = require('./routes/clientType.routes');
 const accountRoutes = require('./routes/account.routes');
@@ -28,7 +27,6 @@ app.use(express.json());
 //Routes
 const basePath = '/api/v1';
 
-app.use(`${basePath}/starwars`, starWarsRoutes);
 app.use(`${basePath}/accountTypes`, accountTypeRoutes);
 app.use(`${basePath}/clientTypes`, clientTypeRoutes);
 app.use(`${basePath}/accounts`, accountRoutes);
