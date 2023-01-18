@@ -6,7 +6,7 @@ const cardTypeSchema = require('../models/cardTypeModel');
 const accountSchema = require('../models/accountModel');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
-const RepeatedError = require('../errors/RepeatedError');
+const RepeatedCardError = require('../errors/RepeatedCardError');
 const logger = require('../config/logger');
 
 router.post(
@@ -40,7 +40,7 @@ router.post(
             const savedCard = await cardSchema.findOne({ account: accountId, cardType: cardTypeId });
             if(savedCard != null){
                 logger.error(`Repeated card. Account with id ${accountId} already has a card of type id ${cardTypeId}`);
-                throw new RepeatedError(`Repeated card. Account with id ${accountId} already has a card of type id ${cardTypeId}`);
+                throw new RepeatedCardError(`Repeated card. Account with id ${accountId} already has a card of type id ${cardTypeId}`);
             } 
 
             const card = new cardSchema({

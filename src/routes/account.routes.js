@@ -9,7 +9,8 @@ const cardSchema = require('../models/cardModel');
 const movementSchema = require('../models/movementModel');
 const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
-const RepeatedError = require('../errors/RepeatedError');
+const RepeatedAliasError = require('../errors/RepeatedAliasError');
+const RepeatedAccountTypeError = require('../errors/RepeatedAccountTypeError');
 const logger = require('../config/logger');
 
 router.get(
@@ -115,7 +116,7 @@ router.post(
             const savedAccount = await accountSchema.findOne({ client: clientId, accountType: accountType._id });
             if (savedAccount != null) {
                 logger.error(`Repeated account. Client id: ${clientId}, Account type id: ${accountType._id}`);
-                throw new RepeatedError(`Repeated account. Client id: ${clientId}, Account type id: ${accountType._id}`);
+                throw new RepeatedAccountTypeError(`Repeated account. Client id: ${clientId}, Account type id: ${accountType._id}`);
             }
 
             if (alias == null || alias == '')
@@ -123,8 +124,8 @@ router.post(
 
             const accountWithSameAlias = await accountSchema.findOne({ alias: alias });
             if (accountWithSameAlias != null) {
-                logger.error(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
-                throw new RepeatedError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
+                logger.error(`Repeated alias. Cannot use alias ${alias}`);
+                throw new RepeatedAliasError(`Repeated alias. Cannot use alias ${alias}`);
             }
 
             let accountNumberRepeated = true;
@@ -200,7 +201,7 @@ router.patch(
                 const accountWithSameAlias = await accountSchema.findOne({ alias: alias });
                 if (accountWithSameAlias != null && accountWithSameAlias._id != accountId) {
                     logger.error(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
-                    throw new RepeatedError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
+                    throw new RepeatedAliasError(`Repeated alias. Cannot use alias ${alias} for account id: ${accountId}`);
                 }
             }
 

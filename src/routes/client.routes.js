@@ -6,7 +6,7 @@ const clientTypeSchema = require('../models/clientTypeModel');
 const accountSchema = require('../models/accountModel');
 const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
-const RepeatedError = require('../errors/RepeatedError');
+const RepeatedDocumentError = require('../errors/RepeatedDocumentError');
 const logger = require('../config/logger');
 
 router.get(
@@ -141,7 +141,7 @@ router.post(
             const savedClient = await clientSchema.findOne().or([{ document: document }, { cuitCuil: cuitCuil }]);
             if (savedClient != null) {
                 logger.error(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
-                throw new RepeatedError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
+                throw new RepeatedDocumentError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
             }
 
             const newClient = new clientSchema({
@@ -201,7 +201,7 @@ router.patch(
                 const savedClient = await clientSchema.findOne().or([{ document: document }, { cuitCuil: cuitCuil }]);
                 if (savedClient != null && savedClient._id != clientId) {
                     logger.error(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
-                    throw new RepeatedError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
+                    throw new RepeatedDocumentError(`There is a client with document ${document} or cuit/cuil ${cuitCuil} already`);
                 }
             }
 

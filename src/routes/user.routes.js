@@ -5,7 +5,7 @@ const userSchema = require('../models/userModel');
 const userTypeSchema = require('../models/userTypeModel');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
-const RepeatedError = require('../errors/RepeatedError');
+const RepeatedUsernameError = require('../errors/RepeatedUsernameError');
 const logger = require('../config/logger');
 
 router.get(
@@ -63,7 +63,7 @@ router.post(
             const repeatedUser = await userSchema.findOne({ userName: userName });
             if (repeatedUser != null) {
                 logger.error(`Repeated userName. Cannot use username ${userName}`);
-                throw new RepeatedError(`Repeated userName. Cannot use username ${userName}`);
+                throw new RepeatedUsernameError(`Repeated userName. Cannot use username ${userName}`);
             }
 
             const newUser = {
