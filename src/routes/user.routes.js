@@ -37,11 +37,43 @@ router.get(
     }
 );
 
+router.get(
+    '/:userId',
+    param('userId').not().isEmpty().isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/users/${req.params.userId}`);
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating request. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating request", errors.array());
+            }
+
+            const userId = req.params.userId;
+
+            const user = await userSchema
+                .findOne({ _id: userId })
+                .populate('userType', 'id description code');
+
+            if (user == null) {
+                logger.error(`User with id ${userId} not found`);
+                throw new NotFoundError(`User with id ${userId} not found`);
+            }
+
+            logger.info(`End - GET /api/v1/users/${req.params.userId}`);
+            res.json(user);
+        } catch (error) {
+            logger.error(`Error getting user. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
 router.post(
     '/',
     body('userName').not().isEmpty().isLength({min: 5, max: 100}),
     body('password').not().isEmpty().isLength({min: 5, max: 100}),
-    body('userTypeId').not().isEmpty().isLength(24),
+    body('userTypeCode').not().isEmpty(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/users, body: ${JSON.stringify(req.body)}`);
 
@@ -52,12 +84,12 @@ router.post(
                 throw new ValidationError("Error validating body", errors.array());
             }
 
-            const { userName, password, userTypeId } = req.body;
+            const { userName, password, userTypeCode } = req.body;
 
-            const userType = await userTypeSchema.findById(userTypeId);
+            const userType = await userTypeSchema.findOne({code: userTypeCode});
             if (userType == null) {
-                logger.error(`User type with id ${userTypeId} not found`);
-                throw new NotFoundError(`User type with id ${userTypeId} not found`);
+                logger.error(`User type with code ${userTypeCode} not found`);
+                throw new NotFoundError(`User type with code ${userTypeCode} not found`);
             }
 
             const repeatedUser = await userSchema.findOne({ userName: userName });
@@ -69,7 +101,7 @@ router.post(
             const newUser = {
                 userName: userName,
                 password: password,
-                userType: userTypeId,
+                userType: userType._id,
                 creationDate: new Date(),
                 enable: true,
                 deleteDate: null
@@ -89,6 +121,7 @@ router.post(
 router.patch(
     '/:userId',
     param('userId').not().isEmpty().isLength(24),
+    body('userName').not().isEmpty().isLength({min: 5, max: 100}),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/users/${req.params.userId}, body: ${JSON.stringify(req.body)}`);
@@ -101,9 +134,16 @@ router.patch(
             }
 
             const userId = req.params.userId;
-            const { enable } = req.body;
+            const { enable, userName } = req.body;
+
+            const repeatedUser = await userSchema.findOne({ userName: userName });
+            if (repeatedUser != null && repeatedUser._id != userId) {
+                logger.error(`Repeated userName. Cannot use username ${userName}`);
+                throw new RepeatedUsernameError(`Repeated userName. Cannot use username ${userName}`);
+            }
 
             const newValues = {
+                userName,
                 enable
             };
 
