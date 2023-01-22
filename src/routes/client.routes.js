@@ -95,9 +95,9 @@ router.get(
             }
 
             const accounts = await accountSchema
-                .find({ clientId: clientId })
+                .find({ client: clientId })
                 .populate('client', 'id name')
-                .populate('accountType', 'id description');
+                .populate('accountType', 'id description code');
 
             logger.info(`End - GET /api/v1/clients/${req.params.clientId}/accounts, body: ${JSON.stringify(req.body)}`);
             res.json(accounts);
