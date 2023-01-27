@@ -5,6 +5,7 @@ const authenticateJWT = require('../middlewares/authentication');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
 const userSchema = require('../models/userModel');
+const clientSchema = require('../models/clientModel');
 const userTypeSchema = require('../models/userTypeModel');
 const NotFoundError = require('../errors/NotFoundError');
 const ValidationError = require('../errors/ValidationError');
@@ -126,7 +127,7 @@ router.post(
     body('userName').not().isEmpty().isLength({ min: 5, max: 100 }),
     body('password').not().isEmpty().isLength({ min: 5, max: 100 }),
     async (req, res, next) => {
-        logger.info(`Start - POST /api/v1/users/login, body: ${JSON.stringify(req.body)}`);
+        logger.info(`Start - POST /api/v1/users/login, body: ${JSON.stringify(req.body.userName)}`);
 
         try {
             const { userName, password } = req.body;
@@ -145,24 +146,30 @@ router.post(
                 throw new ValidationError(`Error validating user`);
             }
 
+            let client = null;
+
+            if (user.userType.code === 'CLIENT')
+                client = await clientSchema.findOne({ user: user._id.valueOf() });
+
             const accessToken = jwt.sign(
                 {
                     userId: user._id,
                     userName: user.userName,
-                    userType: user.userType.code
+                    userType: user.userType.code,
                 }
                 , process.env.JWT_SECRET
             );
 
-            logger.info(`End - POST /api/v1/users/login, body: ${JSON.stringify(req.body)}`);
+            logger.info(`End - POST /api/v1/users/login, body: ${JSON.stringify(req.body.userName)}`);
             res.json(
                 {
                     logged: true,
                     token: accessToken,
                     user: {
-                        id: user.id,
+                        id: user._id,
                         userName: user.userName,
-                        userType: user.userType.code
+                        userType: user.userType.code,
+                        clientId: client != null ? client._id : null
                     }
                 }
             );

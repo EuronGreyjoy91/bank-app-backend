@@ -58,7 +58,8 @@ router.get(
 
             const client = await clientSchema
                 .findOne({ _id: clientId })
-                .populate('clientType', 'id description code');
+                .populate('clientType', 'id description code')
+                .populate('user', 'id');
 
             if (client == null) {
                 logger.error(`Client with id ${clientId} not found`);
@@ -110,6 +111,7 @@ router.get(
 
 router.post(
     '/',
+    body('userId').not().isEmpty().isLength(24),
     body('name').optional().not().isEmpty().isLength({ min: 3, max: 200 }),
     body('lastName').optional().not().isEmpty().isLength({ min: 3, max: 200 }),
     body('document').optional().not().isEmpty().isLength({ min: 8, max: 8 }),
@@ -129,7 +131,7 @@ router.post(
 
             const {
                 name, lastName, document, businessName,
-                adress, cuitCuil, clientTypeCode
+                adress, cuitCuil, clientTypeCode, userId
             } = req.body;
 
             const clientType = await clientTypeSchema.findOne({ code: clientTypeCode });
@@ -154,7 +156,8 @@ router.post(
                 creationDate: new Date(),
                 enable: true,
                 deleteDate: null,
-                clientType: clientType._id
+                clientType: clientType._id,
+                user: userId
             });
 
             await clientSchema.create(newClient);
@@ -171,6 +174,7 @@ router.post(
 router.patch(
     '/:clientId',
     param('clientId').not().isEmpty().isLength(24),
+    body('userId').not().isEmpty().isLength(24),
     body('name').optional().isString().isLength({ min: 3, max: 200 }),
     body('lastName').optional().isString().isLength({ min: 3, max: 200 }),
     body('adress').optional().not().isEmpty(),
@@ -189,7 +193,7 @@ router.patch(
             }
 
             const clientId = req.params.clientId;
-            const { name, lastName, adress, enable, businessName, document, cuitCuil } = req.body;
+            const { name, lastName, adress, enable, businessName, document, cuitCuil, userId } = req.body;
 
             const client = await clientSchema.findById(clientId);
             if (client == null) {
@@ -212,7 +216,8 @@ router.patch(
                 businessName,
                 document,
                 cuitCuil,
-                enable
+                enable,
+                user: userId
             }
 
             if (enable != null && !enable)
