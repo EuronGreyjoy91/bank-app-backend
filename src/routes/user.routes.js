@@ -1,4 +1,7 @@
 const express = require('express');
+const bcrypt = require("bcryptjs");
+const jwt = require('jsonwebtoken');
+const authenticateJWT = require('../middlewares/authentication');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
 const userSchema = require('../models/userModel');
@@ -71,8 +74,8 @@ router.get(
 
 router.post(
     '/',
-    body('userName').not().isEmpty().isLength({min: 5, max: 100}),
-    body('password').not().isEmpty().isLength({min: 5, max: 100}),
+    body('userName').not().isEmpty().isLength({ min: 5, max: 100 }),
+    body('password').not().isEmpty().isLength({ min: 5, max: 100 }),
     body('userTypeCode').not().isEmpty(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/users, body: ${JSON.stringify(req.body)}`);
@@ -86,7 +89,7 @@ router.post(
 
             const { userName, password, userTypeCode } = req.body;
 
-            const userType = await userTypeSchema.findOne({code: userTypeCode});
+            const userType = await userTypeSchema.findOne({ code: userTypeCode });
             if (userType == null) {
                 logger.error(`User type with code ${userTypeCode} not found`);
                 throw new NotFoundError(`User type with code ${userTypeCode} not found`);
@@ -100,7 +103,7 @@ router.post(
 
             const newUser = {
                 userName: userName,
-                password: password,
+                password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
                 userType: userType._id,
                 creationDate: new Date(),
                 enable: true,
@@ -118,10 +121,62 @@ router.post(
     }
 );
 
+router.post(
+    '/login',
+    body('userName').not().isEmpty().isLength({ min: 5, max: 100 }),
+    body('password').not().isEmpty().isLength({ min: 5, max: 100 }),
+    async (req, res, next) => {
+        logger.info(`Start - POST /api/v1/users/login, body: ${JSON.stringify(req.body)}`);
+
+        try {
+            const { userName, password } = req.body;
+
+            const user = await userSchema
+                .findOne({ userName: userName, enable: true })
+                .populate('userType', 'code')
+
+            if (user == null) {
+                logger.error(`User with userName ${userName} not found`);
+                throw new NotFoundError(`User with userName ${userName} not found`);
+            }
+
+            if (!bcrypt.compareSync(password, user.password)) {
+                logger.error(`Error validating user`);
+                throw new ValidationError(`Error validating user`);
+            }
+
+            const accessToken = jwt.sign(
+                {
+                    userId: user._id,
+                    userName: user.userName,
+                    userType: user.userType.code
+                }
+                , process.env.JWT_SECRET
+            );
+
+            logger.info(`End - POST /api/v1/users/login, body: ${JSON.stringify(req.body)}`);
+            res.json(
+                {
+                    logged: true,
+                    token: accessToken,
+                    user: {
+                        id: user.id,
+                        userName: user.userName,
+                        userType: user.userType.code
+                    }
+                }
+            );
+        } catch (error) {
+            logger.error(`Error login user. Error: ${error}`);
+            next(error);
+        }
+    }
+);
+
 router.patch(
     '/:userId',
     param('userId').not().isEmpty().isLength(24),
-    body('userName').not().isEmpty().isLength({min: 5, max: 100}),
+    body('userName').not().isEmpty().isLength({ min: 5, max: 100 }),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/users/${req.params.userId}, body: ${JSON.stringify(req.body)}`);

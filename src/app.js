@@ -1,4 +1,5 @@
 const express = require('express');
+const dontenv = require('dotenv').config()
 const cors = require('cors');
 const { mongoose } = require('./database');
 const logger = require('./config/logger');
