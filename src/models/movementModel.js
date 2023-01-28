@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const movementSchema = new Schema({
     concept: { type: String },
-    date: { type: Date, required: true },
+    creationDate: { type: Date, required: true },
     amount: { type: Number, required: true },
     originAccount: {
         type: mongoose.ObjectId,
@@ -16,6 +16,10 @@ const movementSchema = new Schema({
     movementType: {
         type: mongoose.ObjectId,
         ref: 'movementType'
+    },
+    client: {
+        type: mongoose.ObjectId,
+        ref: 'client'
     }
 });
 

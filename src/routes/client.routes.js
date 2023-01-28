@@ -5,6 +5,7 @@ const { body, param, validationResult } = require('express-validator');
 const clientSchema = require('../models/clientModel');
 const clientTypeSchema = require('../models/clientTypeModel');
 const accountSchema = require('../models/accountModel');
+const movementSchema = require('../models/movementModel');
 const ValidationError = require('../errors/ValidationError');
 const NotFoundError = require('../errors/NotFoundError');
 const RepeatedDocumentError = require('../errors/RepeatedDocumentError');
@@ -128,6 +129,56 @@ router.get(
     }
 )
 
+router.get(
+    '/:clientId/movements',
+    param('clientId').not().isEmpty().isLength(24),
+    async (req, res, next) => {
+        logger.info(`Start - GET /api/v1/clients/${req.params.clientId}/movements, body: ${JSON.stringify(req.body)}`);
+
+        try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
+                throw new ValidationError("Error validating body", errors.array());
+            }
+
+            const clientId = req.params.clientId;
+            const savedClient = await clientSchema.findById(clientId);
+            if (savedClient == null) {
+                logger.error(`Client with id ${clientId} not found`);
+                throw new NotFoundError(`Client with id ${clientId} not found`);
+            }
+
+            let filters = {
+                client: clientId
+            }
+
+            const movementTypeId = req.query.movementTypeId;
+            if (movementTypeId != undefined)
+                filters.movementType = movementTypeId;
+
+            const movements = await movementSchema
+                .find(filters)
+                .populate('client', 'id name')
+                .populate('movementType', 'id description')
+                .populate('originAccount', 'number alias')
+                .populate('destinyAccount', 'number alias');
+
+            logger.info(`End - GET /api/v1/clients/${req.params.clientId}/movements, body: ${JSON.stringify(req.body)}`);
+            res.json(movements);
+        } catch (error) {
+            logger.error(`Error searching movements for client ${req.params.clientId}. Error ${error}`);
+            next(error);
+        }
+    }
+)
+
 router.post(
     '/',
     body('userId').not().isEmpty().isLength(24),
@@ -216,7 +267,7 @@ router.patch(
                 res.sendStatus(authResponse);
                 return;
             }
-            
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
