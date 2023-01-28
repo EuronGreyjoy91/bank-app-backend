@@ -1,4 +1,5 @@
 const express = require('express');
+const authenticateJWT = require('../middlewares/authentication');
 const router = express.Router();
 const randomWords = require('random-spanish-words');
 const { body, param, validationResult } = require('express-validator');
@@ -19,6 +20,12 @@ router.get(
         logger.info(`Start - GET /api/v1/accounts, query: ${JSON.stringify(req.query)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             let filters = {};
             const accountTypeIdFilter = req.query.accountTypeId;
             if (accountTypeIdFilter != undefined)
@@ -55,6 +62,12 @@ router.get(
         logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating request. Error: ${JSON.stringify(errors.array())}`);
@@ -86,12 +99,18 @@ router.post(
     '/',
     body('clientId').not().isEmpty().isLength(24),
     body('accountTypeCode').not().isEmpty(),
-    body('alias').optional().isString().isLength({min: 10, max: 200}),
+    body('alias').optional().isString().isLength({ min: 10, max: 200 }),
     body('offLimitAmount').optional(),
     async (req, res, next) => {
         logger.info(`Start - POST /api/v1/accounts, body: ${JSON.stringify(req.body)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -176,12 +195,18 @@ router.patch(
     '/:accountId',
     param('accountId').not().isEmpty().isLength(24),
     body('enable').optional().isBoolean(),
-    body('alias').optional().isString().isLength({min: 10, max: 200}),
+    body('alias').optional().isString().isLength({ min: 10, max: 200 }),
     body('offLimitAmount').optional().isNumeric(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/accounts/${req.params.accountId}, body: ${JSON.stringify(req.body)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -236,6 +261,12 @@ router.get(
         logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}/cards`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -271,6 +302,12 @@ router.get(
         logger.info(`Start - GET /api/v1/accounts/${req.params.accountId}/movements`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);

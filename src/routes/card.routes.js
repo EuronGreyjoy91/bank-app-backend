@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticateJWT = require('../middlewares/authentication');
 const { body, param, validationResult } = require('express-validator');
 const cardSchema = require('../models/cardModel');
 const cardTypeSchema = require('../models/cardTypeModel');

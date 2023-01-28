@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticateJWT = require('../middlewares/authentication');
 const { body, param, validationResult } = require('express-validator');
 const clientSchema = require('../models/clientModel');
 const clientTypeSchema = require('../models/clientTypeModel');
@@ -13,6 +14,12 @@ router.get(
     '/',
     async (req, res, next) => {
         logger.info(`Start - GET /api/v1/clients, query: ${JSON.stringify(req.query)}`);
+
+        const authResponse = authenticateJWT(req, res);
+        if (authResponse == 401 || authResponse == 403) {
+            res.sendStatus(authResponse);
+            return;
+        }
 
         let filters = {};
 
@@ -48,6 +55,12 @@ router.get(
     async (req, res, next) => {
         logger.info(`Start - GET /api/v1/clients/${req.params.clientId}`);
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating request. Error: ${JSON.stringify(errors.array())}`);
@@ -82,6 +95,12 @@ router.get(
         logger.info(`Start - GET /api/v1/clients/${req.params.clientId}/accounts, body: ${JSON.stringify(req.body)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -123,6 +142,12 @@ router.post(
         logger.info(`Start - POST /api/v1/clients, body: ${JSON.stringify(req.body)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -186,6 +211,12 @@ router.patch(
         logger.info(`Start - PATCH /api/v1/clients/${req.params.clientId}, body: ${JSON.stringify(req.body)}`);
 
         try {
+            const authResponse = authenticateJWT(req, res);
+            if (authResponse == 401 || authResponse == 403) {
+                res.sendStatus(authResponse);
+                return;
+            }
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
