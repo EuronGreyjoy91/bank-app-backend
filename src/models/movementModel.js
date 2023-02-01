@@ -17,10 +17,14 @@ const movementSchema = new Schema({
         type: mongoose.ObjectId,
         ref: 'movementType'
     },
-    client: {
+    originClientId: {
         type: mongoose.ObjectId,
         ref: 'client'
-    }
+    },
+    destinyClientId: {
+        type: mongoose.ObjectId,
+        ref: 'client'
+    },
 });
 
 module.exports = mongoose.model('movement', movementSchema, 'movements');

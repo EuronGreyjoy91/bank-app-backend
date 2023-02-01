@@ -66,6 +66,7 @@ router.post(
                 movement = new movementSchema({
                     concept: null,
                     destinyAccount: originAccount._id,
+                    destinyClientId : clientId
                 });
 
                 const newBalance = originAccount.balance - Number.parseFloat(amount);
@@ -75,6 +76,7 @@ router.post(
                 movement = new movementSchema({
                     concept: null,
                     destinyAccount: originAccount._id,
+                    destinyClientId : clientId
                 });
 
                 const newBalance = originAccount.balance + Number.parseFloat(amount);
@@ -95,6 +97,7 @@ router.post(
                 movement = new movementSchema({
                     concept: concept,
                     destinyAccount: destinyAccount._id,
+                    destinyClientId : destinyAccount.client._id
                 });
 
                 const newOriginAccountBalance = originAccount.balance - Number.parseFloat(amount);
@@ -105,7 +108,7 @@ router.post(
             }
 
             movement.creationDate = new Date();
-            movement.client = clientId;
+            movement.originClientId = clientId;
             movement.movementType = movementType._id;
             movement.amount = amount;
             movement.originAccount = originAccount._id;

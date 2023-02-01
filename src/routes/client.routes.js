@@ -29,17 +29,24 @@ router.get(
             filters.clientType = clientTypeIdFilter;
 
         const cuitCuilFilter = req.query.cuitCuil;
-        if (cuitCuilFilter != undefined)
-            filters.cuitCuil = cuitCuilFilter;
+        if (cuitCuilFilter != undefined) {
+            filters.cuitCuil = {
+                $regex: '.*' + cuitCuilFilter + '.*'
+            };
+        }
 
         const documentFilter = req.query.document;
-        if (documentFilter != undefined)
-            filters.document = req.query.document;
+        if (documentFilter != undefined) {
+            filters.document = {
+                $regex: '.*' + documentFilter + '.*'
+            };
+        }
 
         try {
             const clients = await clientSchema
                 .find(filters)
-                .populate('clientType', 'id description');
+                .populate('clientType', 'id description')
+                .sort({creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients, query: ${JSON.stringify(req.query)}`);
             res.json(clients);
@@ -118,7 +125,8 @@ router.get(
             const accounts = await accountSchema
                 .find({ client: clientId })
                 .populate('client', 'id name')
-                .populate('accountType', 'id description code');
+                .populate('accountType', 'id description code')
+                .sort({creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients/${req.params.clientId}/accounts, body: ${JSON.stringify(req.body)}`);
             res.json(accounts);
@@ -156,7 +164,7 @@ router.get(
             }
 
             let filters = {
-                client: clientId
+                
             }
 
             const movementTypeId = req.query.movementTypeId;
@@ -165,10 +173,11 @@ router.get(
 
             const movements = await movementSchema
                 .find(filters)
-                .populate('client', 'id name')
+                .or([{ originClientId: clientId }, { destinyClientId: clientId }])
                 .populate('movementType', 'id description')
                 .populate('originAccount', 'number alias')
-                .populate('destinyAccount', 'number alias');
+                .populate('destinyAccount', 'number alias')
+                .sort({creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients/${req.params.clientId}/movements, body: ${JSON.stringify(req.body)}`);
             res.json(movements);
@@ -250,13 +259,13 @@ router.post(
 router.patch(
     '/:clientId',
     param('clientId').not().isEmpty().isLength(24),
-    body('userId').not().isEmpty().isLength(24),
+    body('userId').optional().isLength(24),
     body('name').optional().isString().isLength({ min: 3, max: 200 }),
     body('lastName').optional().isString().isLength({ min: 3, max: 200 }),
     body('adress').optional().not().isEmpty(),
     body('bussinessName').optional().not().isEmpty(),
     body('document').optional().not().isEmpty().isLength({ min: 8, max: 8 }),
-    body('cuitCuil').not().isEmpty().isLength({ min: 8, max: 11 }),
+    body('cuitCuil').optional().isLength({ min: 8, max: 11 }),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/clients/${req.params.clientId}, body: ${JSON.stringify(req.body)}`);

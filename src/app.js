@@ -10,8 +10,6 @@ const accountRoutes = require('./routes/account.routes');
 const clientRoutes = require('./routes/client.routes');
 const movementRoutes = require('./routes/movement.routes');
 const movementTypeRoutes = require('./routes/movementType.routes');
-const cardTypeRoutes = require('./routes/cardType.routes');
-const cardRoutes = require('./routes/card.routes');
 const userTypeRoutes = require('./routes/userTypeRoutes');
 const userRoutes = require('./routes/user.routes');
 
@@ -35,8 +33,6 @@ app.use(`${basePath}/accounts`, accountRoutes);
 app.use(`${basePath}/clients`, clientRoutes);
 app.use(`${basePath}/movements`, movementRoutes);
 app.use(`${basePath}/movementTypes`, movementTypeRoutes);
-app.use(`${basePath}/cardTypes`, cardTypeRoutes);
-app.use(`${basePath}/cards`, cardRoutes);
 app.use(`${basePath}/userTypes`, userTypeRoutes);
 app.use(`${basePath}/users`, userRoutes);
 

@@ -30,13 +30,17 @@ router.get(
                 filters.userType = userTypeIdFilter;
 
             const userName = req.query.userName;
-            if (userName != undefined)
-                filters.userName = userName;
+            if (userName != undefined){
+                filters.userName = {
+                    $regex: '.*' + userName + '.*'
+                };
+            }
 
             const users = await userSchema
                 .find(filters)
                 .populate('userType', 'id description')
                 .select('_id userName enable creationDate')
+                .sort({creationDate: -1 });
 
             logger.info(`End - GET /api/v1/users, query: ${JSON.stringify(req.query)}`);
             res.json(users);
@@ -77,6 +81,8 @@ router.get(
                 throw new NotFoundError(`User with id ${userId} not found`);
             }
 
+            
+
             logger.info(`End - GET /api/v1/users/${req.params.userId}`);
             res.json(user);
         } catch (error) {
@@ -95,12 +101,6 @@ router.post(
         logger.info(`Start - POST /api/v1/users, body: ${JSON.stringify(req.body)}`);
 
         try {
-            const authResponse = authenticateJWT(req, res);
-            if (authResponse == 401 || authResponse == 403) {
-                res.sendStatus(authResponse);
-                return;
-            }
-
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 logger.error(`Error validating body. Error: ${JSON.stringify(errors.array())}`);
@@ -201,7 +201,7 @@ router.post(
 router.patch(
     '/:userId',
     param('userId').not().isEmpty().isLength(24),
-    body('userName').not().isEmpty().isLength({ min: 5, max: 100 }),
+    body('userName').optional().isLength({ min: 5, max: 100 }),
     body('enable').optional().isBoolean(),
     async (req, res, next) => {
         logger.info(`Start - PATCH /api/v1/users/${req.params.userId}, body: ${JSON.stringify(req.body)}`);
