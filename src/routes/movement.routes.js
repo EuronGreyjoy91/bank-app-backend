@@ -88,7 +88,10 @@ router.post(
                     throw new InvalidAmountError(`Invalid amount for transfer`);
                 }
 
-                const destinyAccount = await accountSchema.findOne().or([{ alias: aliasNumber }, { number: aliasNumber }]);
+                const destinyAccount = await accountSchema.
+                        findOne({enable: true})
+                        .or([{ alias: aliasNumber }, { number: aliasNumber }]);
+
                 if (destinyAccount == null || (destinyAccount._id == originAccount._id)){
                     logger.error(`Account with alias or number ${aliasNumber} not found`);
                     throw new NotFoundError(`Account with alias or number ${aliasNumber} not found`);

@@ -46,7 +46,7 @@ router.get(
             const clients = await clientSchema
                 .find(filters)
                 .populate('clientType', 'id description')
-                .sort({creationDate: -1 });
+                .sort({ creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients, query: ${JSON.stringify(req.query)}`);
             res.json(clients);
@@ -115,6 +115,7 @@ router.get(
                 throw new ValidationError("Error validating body", errors.array());
             }
 
+
             const clientId = req.params.clientId;
             const savedClient = await clientSchema.findById(clientId);
             if (savedClient == null) {
@@ -122,11 +123,20 @@ router.get(
                 throw new NotFoundError(`Client with id ${clientId} not found`);
             }
 
+            let filter = {
+                client: clientId
+            }
+
+            const enable = req.query.enable;
+            if (enable) {
+                filter.enable = enable;
+            }
+
             const accounts = await accountSchema
-                .find({ client: clientId })
+                .find(filter)
                 .populate('client', 'id name')
                 .populate('accountType', 'id description code')
-                .sort({creationDate: -1 });
+                .sort({ creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients/${req.params.clientId}/accounts, body: ${JSON.stringify(req.body)}`);
             res.json(accounts);
@@ -164,7 +174,7 @@ router.get(
             }
 
             let filters = {
-                
+
             }
 
             const movementTypeId = req.query.movementTypeId;
@@ -177,7 +187,7 @@ router.get(
                 .populate('movementType', 'id description')
                 .populate('originAccount', 'number alias')
                 .populate('destinyAccount', 'number alias')
-                .sort({creationDate: -1 });
+                .sort({ creationDate: -1 });
 
             logger.info(`End - GET /api/v1/clients/${req.params.clientId}/movements, body: ${JSON.stringify(req.body)}`);
             res.json(movements);
