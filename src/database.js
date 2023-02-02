@@ -6,14 +6,15 @@ const connectionParams = {
     useUnifiedTopology: true
 }
 
-//const URI = 'mongodb+srv://test:12345@cluster0.fr3prkn.mongodb.net/?retryWrites=true&w=majority'
-const URI = 'mongodb://127.0.0.1:27017/bankApp';
+const URI = 'mongodb+srv://federicoibarrab:qxluHXHqF91Q91d6@cluster0.fr3prkn.mongodb.net/bankApp?retryWrites=true&w=majority'
+//const URI = 'mongodb://127.0.0.1:27017/bankApp';
 
 mongoose.connect(URI, connectionParams)
     .then(() => {
         logger.info('Connection to database succesufully');
     })
-    .catch(() => {
+    .catch((e) => {
+        logger.error(e);
         logger.error('Error connecting database');
     });
 
