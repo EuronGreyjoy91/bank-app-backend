@@ -48,7 +48,7 @@ Si todo sale bien, el modulo se levanta en http://localhost:4000
 Para lo que es la base de datos no es necesario levantar nada, ya que la misma esta alojada de forma online en mongodb Atlas.
 **En caso de que la conexion no se pueda realizar porque la base de mongodb Atlas esta offline** (es un servidor gratuito), lo que habria que hacer es lo siguiente:
 
-* En el archivo **database.js**, modificar la URI de conexion de base de datos por la que corresponda a la conexion **local**.
+* En el archivo **database.js**, modificar la URI de conexion de base de datos por la que corresponda a la conexion **local** de mongodb.
 
 * Levantar el proyecto.
 
