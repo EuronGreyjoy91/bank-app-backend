@@ -3,7 +3,7 @@
 
 **Profesor**: Gaston Larriera  
 
-## Descripcion del repositorio
+## Descripcion del repositorio 📖
 
 * **Modulo config**: Contiene la configuracion para almacenar los logs en el archivo app.log.
 * **Errors**: Contiene todos los errores disparados por el backend.
@@ -31,7 +31,7 @@ node-fetch-commonjs
 random-spanish-words
 ```
 
-## Como instalarlo
+## Como instalarlo 🔨
 Para levantar el modulo, es necesario situarse en la carpeta donde se lo descargo y ejecutar los siguientes comandos:
 
 ```
@@ -122,7 +122,7 @@ curl --location --request POST 'localhost:4000/api/v1/users' \
 }'
 ```
 
-## Autor
+## Autor ✒️
 
 **Federico Ignacio Ibarra Berardi** - 
 
