@@ -1,19 +1,21 @@
 const mongoose = require('mongoose');
+const logger = require('./config/logger');
 
 const connectionParams = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }
 
-//const URI = 'mongodb+srv://test:12345@cluster0.fr3prkn.mongodb.net/?retryWrites=true&w=majority'
-const URI = 'mongodb://127.0.0.1:27017';
+const URI = 'mongodb+srv://federicoibarrab:qxluHXHqF91Q91d6@cluster0.fr3prkn.mongodb.net/bankApp?retryWrites=true&w=majority'
+//const URI = 'mongodb://127.0.0.1:27017/bankApp';
 
 mongoose.connect(URI, connectionParams)
     .then(() => {
-        console.log('Connection to database succesufully');
+        logger.info('Connection to database succesufully');
     })
-    .catch(() => {
-        console.log('Error connecting database');
+    .catch((e) => {
+        logger.error(e);
+        logger.error('Error connecting database');
     });
 
 
