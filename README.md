@@ -3,7 +3,7 @@
 
 **Profesor**: Gaston Larriera  
 
-## Descripcion del repositorio
+## Descripcion del repositorio 📖
 
 * **Modulo config**: Contiene la configuracion para almacenar los logs en el archivo app.log.
 * **Errors**: Contiene todos los errores disparados por el backend.
@@ -31,7 +31,7 @@ node-fetch-commonjs
 random-spanish-words
 ```
 
-## Como instalarlo
+## Como instalarlo 🔨
 Para levantar el modulo, es necesario situarse en la carpeta donde se lo descargo y ejecutar los siguientes comandos:
 
 ```
@@ -48,7 +48,7 @@ Si todo sale bien, el modulo se levanta en http://localhost:4000
 Para lo que es la base de datos no es necesario levantar nada, ya que la misma esta alojada de forma online en mongodb Atlas.
 **En caso de que la conexion no se pueda realizar porque la base de mongodb Atlas esta offline** (es un servidor gratuito), lo que habria que hacer es lo siguiente:
 
-* En el archivo **database.js**, modificar la URI de conexion de base de datos por la que corresponda a la conexion **local**.
+* En el archivo **database.js**, modificar la URI de conexion de base de datos por la que corresponda a la conexion **local** de mongodb.
 
 * Levantar el proyecto.
 
@@ -122,7 +122,7 @@ curl --location --request POST 'localhost:4000/api/v1/users' \
 }'
 ```
 
-## Autor
+## Autor ✒️
 
 **Federico Ignacio Ibarra Berardi** - 
 
